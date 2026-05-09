@@ -18,19 +18,31 @@ class HotelClassEnum(IntEnum):
 
 class HotelsInput(BaseModel):
     q: str = Field(description="Location of the hotel.")
-    check_in_date: str = Field(description="The check-in date (YYYY-MM-DD) e.g. 2024-12-13.")
-    check_out_date: str = Field(description="The check-out date (YYYY-MM-DD) e.g. 2024-12-19.")
+    check_in_date: str = Field(
+        description="The check-in date (YYYY-MM-DD) e.g. 2024-12-13."
+    )
+    check_out_date: str = Field(
+        description="The check-out date (YYYY-MM-DD) e.g. 2024-12-19."
+    )
     adults: Optional[int] = Field(1, description="The number of adults. Defaults to 1.")
-    children: Optional[int] = Field(0, description="The number of children. Defaults to 0.")
-    hotel_class: Optional[HotelClassEnum] = Field(HotelClassEnum.TWO, description="The hotel class available from 2 to 5.")
+    children: Optional[int] = Field(
+        0, description="The number of children. Defaults to 0."
+    )
+    hotel_class: Optional[HotelClassEnum] = Field(
+        HotelClassEnum.TWO,
+        description="The hotel class available from 2 to 5.",
+    )
 
 
-class HotelsInputSchema(BaseModel):
-    params: HotelsInput
-
-
-@tool(args_schema=HotelsInputSchema)
-def hotels_finder(params: HotelsInput):
+@tool(args_schema=HotelsInput)
+def hotels_finder(
+    q: str,
+    check_in_date: str,
+    check_out_date: str,
+    adults: Optional[int] = 1,
+    children: Optional[int] = 0,
+    hotel_class: Optional[HotelClassEnum] = HotelClassEnum.TWO,
+):
     """
     This tool uses the SerpApi Google Hotels API to retrieve hotels info.
     """
@@ -41,19 +53,17 @@ def hotels_finder(params: HotelsInput):
             "hl": "it",
             "gl": "it",
             "currency": "EUR",
-            "q": params.q,
-            "check_in_date": params.check_in_date,
-            "check_out_date": params.check_out_date,
-            "adults": params.adults,
-            "children": params.children,
-            "hotel_class": params.hotel_class,
+            "q": q,
+            "check_in_date": check_in_date,
+            "check_out_date": check_out_date,
+            "adults": adults,
+            "children": children,
+            "hotel_class": int(hotel_class) if hotel_class is not None else 2,
             "num": 5,
         }
-
         search = GoogleSearch(query_params)
         results = search.get_dict().get("properties", [])
 
-        # Tracing
         print("*" * 80)
         print("hotels_finder")
         print("*" * 80)
